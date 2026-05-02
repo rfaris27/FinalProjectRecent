@@ -151,46 +151,166 @@ flowchart TD
 
 ---
 
-## 3. Component Diagram
+## 3. Class Diagram
+
+```mermaid
+classDiagram
+    class Account {
+        -const int accountNumber
+        -const string login
+        -const string pin
+        -const string holderName
+        -const double balance
+        -const string status
+        -const bool admin
+        +Account(int, string, string, string, double, string, bool)
+        +getAccountNumber() int
+        +getLogin() string
+        +getPin() string
+        +getHolderName() string
+        +getBalance() double
+        +getStatus() string
+        +isAdmin() bool
+    }
+
+    class ILoginDal {
+        <<interface>>
+        +findByCredentials(string, string) Account*
+    }
+
+    class ICustomerOptionsDal {
+        <<interface>>
+        +updateBalance(int, double) bool
+        +findByNumber(int) Account*
+    }
+
+    class IAdminOptionsDal {
+        <<interface>>
+        +insertAccount(string, string, string, double, string) int
+        +deleteAccount(int) bool
+        +updateField(int, string, string) bool
+        +findCustomerByNumber(int) Account*
+    }
+
+    class LoginDal {
+        -Connection* con
+        +findByCredentials(string, string) Account*
+    }
+
+    class CustomerOptionsDal {
+        -Connection* con
+        +updateBalance(int, double) bool
+        +findByNumber(int) Account*
+    }
+
+    class AdminOptionsDal {
+        -Connection* con
+        +insertAccount(string, string, string, double, string) int
+        +deleteAccount(int) bool
+        +updateField(int, string, string) bool
+        +findCustomerByNumber(int) Account*
+    }
+
+    class Login {
+        -ILoginDal* dal
+        +Login(ILoginDal*)
+        +authenticate(string, string) Account*
+    }
+
+    class CustomerOptions {
+        -ICustomerOptionsDal* dal
+        +CustomerOptions(ICustomerOptionsDal*)
+        +withdraw(Account, double) TransactionResult
+        +deposit(Account, double) TransactionResult
+        +getBalance(Account) double
+    }
+
+    class AdminOptions {
+        -IAdminOptionsDal* dal
+        +AdminOptions(IAdminOptionsDal*)
+        +createAccount(string, string, string, double, string) AdminResult
+        +deleteAccount(int) AdminResult
+        +getHolderName(int) string
+        +updateAccountField(int, string, string) AdminResult
+        +searchAccount(int) Account*
+    }
+
+    class ConsoleUI {
+        -Login* loginService
+        -CustomerOptions* customerService
+        -AdminOptions* adminService
+        +ConsoleUI(Login*, CustomerOptions*, AdminOptions*)
+        +run() void
+    }
+
+    ILoginDal <|.. LoginDal
+    ICustomerOptionsDal <|.. CustomerOptionsDal
+    IAdminOptionsDal <|.. AdminOptionsDal
+    Login --> ILoginDal
+    CustomerOptions --> ICustomerOptionsDal
+    AdminOptions --> IAdminOptionsDal
+    ConsoleUI --> Login
+    ConsoleUI --> CustomerOptions
+    ConsoleUI --> AdminOptions
+    LoginDal ..> Account
+    CustomerOptionsDal ..> Account
+    AdminOptionsDal ..> Account
+```
+
+---
+
+## 4. Component Diagram (Layered Architecture)
 
 ```mermaid
 graph TB
-    subgraph "C++ Application"
-        MAIN["main.cpp<br/>(Entry Point)"]
-        ACC["Account.h<br/>(Account Class + Input Validators)"]
-        LOGIN["Login.h<br/>(Authentication)"]
-        CUST["CustomerOptions.h<br/>(Withdraw, Deposit, Balance)"]
-        ADMIN["AdminOptions.h<br/>(Create, Delete, Update, Search)"]
+    subgraph UILayer["Presentation Layer (ui/)"]
+        CONSOLEUI["ConsoleUI.h<br/>All console I/O, menus"]
     end
 
-    subgraph "MySQL Database"
-        DB[(ATM Database)]
-        TBL["accounts table<br/>AccountNumber, Login, Pin,<br/>HolderName, Balance, Status, IsAdmin"]
+    subgraph ModelLayer["Business Logic Layer (model/)"]
+        ACC["Account.h<br/>Immutable data class, no setters"]
+        LOGIN_M["Login.h<br/>Authentication logic"]
+        CUST_M["CustomerOptions.h<br/>Withdraw, Deposit, Balance"]
+        ADMIN_M["AdminOptions.h<br/>Create, Delete, Update, Search"]
     end
 
-    MAIN --> ACC
-    MAIN --> LOGIN
-    MAIN --> CUST
-    MAIN --> ADMIN
-    LOGIN --> ACC
-    CUST --> ACC
-    ADMIN --> ACC
-    LOGIN --> DB
-    CUST --> DB
-    ADMIN --> DB
-    DB --> TBL
+    subgraph DALLayer["Data Access Layer (DAL/)"]
+        LOGIN_D["LoginDal.h/.cpp<br/>SQL: SELECT credentials"]
+        CUST_D["CustomerOptionsDal.h/.cpp<br/>SQL: UPDATE balance"]
+        ADMIN_D["AdminOptionsDal.h/.cpp<br/>SQL: INSERT, DELETE, UPDATE, SELECT"]
+    end
+
+    subgraph DataStore["MySQL Database"]
+        DB[(accounts table)]
+    end
+
+    CONSOLEUI --> LOGIN_M
+    CONSOLEUI --> CUST_M
+    CONSOLEUI --> ADMIN_M
+    LOGIN_M --> LOGIN_D
+    CUST_M --> CUST_D
+    ADMIN_M --> ADMIN_D
+    LOGIN_D --> DB
+    CUST_D --> DB
+    ADMIN_D --> DB
+    LOGIN_M --> ACC
+    CUST_M --> ACC
+    ADMIN_M --> ACC
 ```
 
 ### Component Responsibilities
 
-| Component | File | Responsibility |
-|-----------|------|----------------|
-| Entry Point | `main.cpp` | DB connection, login loop, role selection, menu routing |
-| Account Model | `Account.h` | Data encapsulation (private members, getters/setters), input validation helpers |
-| Authentication | `Login.h` | Prepared statement login query, populates Account object |
-| Customer Options | `CustomerOptions.h` | Withdraw, deposit, display balance with DB updates |
-| Admin Options | `AdminOptions.h` | CRUD operations on customer accounts |
-| Database Schema | `schema.sql` | Table definition and seed data |
+| Layer | Component | File | Responsibility |
+|-------|-----------|------|----------------|
+| UI | ConsoleUI | `src/ui/ConsoleUI.h` | All std::cin/std::cout, menus, user input |
+| Model | Account | `src/model/Account.h` | Immutable data class (constructor, const members, no setters) |
+| Model | Login | `src/model/Login.h` | Authentication business logic |
+| Model | CustomerOptions | `src/model/CustomerOptions.h` | Withdraw/deposit validation and logic |
+| Model | AdminOptions | `src/model/AdminOptions.h` | Account CRUD validation and logic |
+| DAL | LoginDal | `src/DAL/LoginDal.h/.cpp` | SQL only: credential queries |
+| DAL | CustomerOptionsDal | `src/DAL/CustomerOptionsDal.h/.cpp` | SQL only: balance updates |
+| DAL | AdminOptionsDal | `src/DAL/AdminOptionsDal.h/.cpp` | SQL only: account CRUD queries |
+| Entry | main.cpp | `src/main.cpp` | Wires DAL -> model -> UI together |
 
 ---
 

@@ -1,0 +1,9 @@
+build/
+atm_app
+*.o
+*.a
+*.gcno
+*.gcda
+coverage/
+docs/html/
+docs/latex/

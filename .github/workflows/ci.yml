@@ -1,0 +1,109 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: p
+          MYSQL_ROOT_HOST: '%'
+          MYSQL_DATABASE: ATM
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libmysqlcppconn-dev \
+            libgtest-dev \
+            lcov \
+            doxygen \
+            graphviz \
+            clang-format \
+            cmake \
+            build-essential
+          cd /usr/src/gtest && sudo cmake . && sudo make && sudo cp lib/*.a /usr/lib/
+
+      - name: Check code formatting
+        run: |
+          find src tests -name '*.h' -o -name '*.cpp' | xargs clang-format --dry-run --Werror
+
+      - name: Build Debug
+        run: |
+          mkdir -p build/debug
+          cd build/debug
+          cmake ../.. -DCMAKE_BUILD_TYPE=Debug
+          make -j$(nproc)
+
+      - name: Build Release
+        run: |
+          mkdir -p build/release
+          cd build/release
+          cmake ../.. -DCMAKE_BUILD_TYPE=Release
+          make -j$(nproc)
+
+      - name: Build Documentation
+        run: |
+          doxygen Doxyfile
+
+      - name: Upload Documentation
+        uses: actions/upload-artifact@v4
+        with:
+          name: documentation
+          path: docs/html/
+
+      - name: Run Unit Tests
+        run: |
+          cd build/debug
+          ./atm_tests --gtest_output=xml:test_results.xml
+
+      - name: Generate Coverage Report
+        run: |
+          cd build/debug
+          lcov --capture --directory . --output-file coverage.info --no-external
+          lcov --remove coverage.info '*/tests/*' '*/gtest/*' --output-file coverage.info
+          COVERAGE=$(lcov --summary coverage.info 2>&1 | grep 'lines' | sed 's/.*: //' | sed 's/%.*//')
+          echo "Code coverage: ${COVERAGE}%"
+          if (( $(echo "$COVERAGE < 90" | bc -l) )); then
+            echo "ERROR: Code coverage ${COVERAGE}% is below 90% threshold"
+            exit 1
+          fi
+
+      - name: Upload Coverage Report
+        run: |
+          cd build/debug
+          genhtml coverage.info --output-directory ../../coverage
+        if: always()
+
+      - name: Upload Coverage Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+        if: always()
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: build/debug/test_results.xml
+        if: always()
