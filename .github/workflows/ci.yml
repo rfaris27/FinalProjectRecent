@@ -35,13 +35,17 @@ jobs:
           sudo apt-get install -y \
             libmysqlcppconn-dev \
             libgtest-dev \
+            libgmock-dev \
             lcov \
             doxygen \
             graphviz \
             clang-format \
             cmake \
             build-essential
-          cd /usr/src/gtest && sudo cmake . && sudo make && sudo cp lib/*.a /usr/lib/
+          sudo cmake -S /usr/src/googletest -B /tmp/gtest-build
+          sudo cmake --build /tmp/gtest-build
+          sudo cmake --install /tmp/gtest-build
+          sudo rm -rf /tmp/gtest-build
 
       - name: Check code formatting
         run: |
@@ -92,7 +96,7 @@ jobs:
         run: |
           cd build/debug
           genhtml coverage.info --output-directory ../../coverage
-        if: always()
+        if: success()
 
       - name: Upload Coverage Artifact
         uses: actions/upload-artifact@v4
