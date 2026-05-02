@@ -29,7 +29,8 @@ class MockLoginDal : public ILoginDal {
                                                const std::string &pin) override {
         std::string key = login + ":" + pin;
         auto it = accounts.find(key);
-        if (it == accounts.end()) return nullptr;
+        if (it == accounts.end())
+            return nullptr;
         const Account &a = *(it->second);
         return std::make_unique<Account>(a.getAccountNumber(), a.getLogin(), a.getPin(),
                                          a.getHolderName(), a.getBalance(), a.getStatus(),
@@ -48,13 +49,13 @@ class MockCustomerOptionsDal : public ICustomerOptionsDal {
     void addAccount(int num, const std::string &login, const std::string &pin,
                     const std::string &name, double balance, const std::string &status,
                     bool admin) {
-        accounts[num] =
-            std::make_unique<Account>(num, login, pin, name, balance, status, admin);
+        accounts[num] = std::make_unique<Account>(num, login, pin, name, balance, status, admin);
     }
 
     bool updateBalance(int accountNumber, double newBalance) override {
         auto it = accounts.find(accountNumber);
-        if (it == accounts.end()) return false;
+        if (it == accounts.end())
+            return false;
         const Account &old = *(it->second);
         accounts[accountNumber] = std::make_unique<Account>(
             old.getAccountNumber(), old.getLogin(), old.getPin(), old.getHolderName(), newBalance,
@@ -64,7 +65,8 @@ class MockCustomerOptionsDal : public ICustomerOptionsDal {
 
     std::unique_ptr<Account> findByNumber(int accountNumber) override {
         auto it = accounts.find(accountNumber);
-        if (it == accounts.end()) return nullptr;
+        if (it == accounts.end())
+            return nullptr;
         const Account &a = *(it->second);
         return std::make_unique<Account>(a.getAccountNumber(), a.getLogin(), a.getPin(),
                                          a.getHolderName(), a.getBalance(), a.getStatus(),
@@ -84,9 +86,9 @@ class MockAdminOptionsDal : public IAdminOptionsDal {
     void addAccount(int num, const std::string &login, const std::string &pin,
                     const std::string &name, double balance, const std::string &status,
                     bool admin) {
-        accounts[num] =
-            std::make_unique<Account>(num, login, pin, name, balance, status, admin);
-        if (num >= nextId) nextId = num + 1;
+        accounts[num] = std::make_unique<Account>(num, login, pin, name, balance, status, admin);
+        if (num >= nextId)
+            nextId = num + 1;
     }
 
     int insertAccount(const std::string &login, const std::string &pin,
@@ -100,8 +102,10 @@ class MockAdminOptionsDal : public IAdminOptionsDal {
 
     bool deleteAccount(int accountNumber) override {
         auto it = accounts.find(accountNumber);
-        if (it == accounts.end()) return false;
-        if (it->second->isAdmin()) return false;
+        if (it == accounts.end())
+            return false;
+        if (it->second->isAdmin())
+            return false;
         accounts.erase(it);
         return true;
     }
@@ -109,7 +113,8 @@ class MockAdminOptionsDal : public IAdminOptionsDal {
     bool updateField(int accountNumber, const std::string &field,
                      const std::string &value) override {
         auto it = accounts.find(accountNumber);
-        if (it == accounts.end()) return false;
+        if (it == accounts.end())
+            return false;
         const Account &old = *(it->second);
 
         std::string newLogin = old.getLogin();
@@ -118,11 +123,16 @@ class MockAdminOptionsDal : public IAdminOptionsDal {
         double newBalance = old.getBalance();
         std::string newStatus = old.getStatus();
 
-        if (field == "Login") newLogin = value;
-        else if (field == "Pin") newPin = value;
-        else if (field == "HolderName") newName = value;
-        else if (field == "Balance") newBalance = std::stod(value);
-        else if (field == "Status") newStatus = value;
+        if (field == "Login")
+            newLogin = value;
+        else if (field == "Pin")
+            newPin = value;
+        else if (field == "HolderName")
+            newName = value;
+        else if (field == "Balance")
+            newBalance = std::stod(value);
+        else if (field == "Status")
+            newStatus = value;
 
         accounts[accountNumber] = std::make_unique<Account>(
             accountNumber, newLogin, newPin, newName, newBalance, newStatus, old.isAdmin());
@@ -131,8 +141,10 @@ class MockAdminOptionsDal : public IAdminOptionsDal {
 
     std::unique_ptr<Account> findCustomerByNumber(int accountNumber) override {
         auto it = accounts.find(accountNumber);
-        if (it == accounts.end()) return nullptr;
-        if (it->second->isAdmin()) return nullptr;
+        if (it == accounts.end())
+            return nullptr;
+        if (it->second->isAdmin())
+            return nullptr;
         const Account &a = *(it->second);
         return std::make_unique<Account>(a.getAccountNumber(), a.getLogin(), a.getPin(),
                                          a.getHolderName(), a.getBalance(), a.getStatus(),
