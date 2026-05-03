@@ -12,6 +12,8 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     doxygen \
     graphviz \
     clang-format \
+    cppcheck \
+    bc \
     && cmake -S /usr/src/googletest -B /tmp/gtest-build \
     && cmake --build /tmp/gtest-build \
     && cmake --install /tmp/gtest-build \

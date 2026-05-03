@@ -1,64 +1,73 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+# Full local / CI pipeline (aligned with HandsOn_13_consol: format, cppcheck, CMake builds, ctest, Doxygen).
+# Extra steps for this project: lcov coverage on src/, HTML report, 90% line threshold.
 
-echo "=== ATM Build Script ==="
+set -euo pipefail
 
-# Step 1: Format check
-echo ""
-echo "--- Step 1: Checking code formatting ---"
-FORMAT_DIFF=$(find src tests -name '*.h' -o -name '*.cpp' | xargs clang-format --dry-run --Werror 2>&1 || true)
-if [ -n "$FORMAT_DIFF" ]; then
-    echo "WARNING: Some files are not formatted. Run: find src tests -name '*.h' -o -name '*.cpp' | xargs clang-format -i"
-else
-    echo "All files formatted correctly."
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$ROOT"
+
+echo "===== Step 1: Check formatting (clang-format) ====="
+find src tests \( -name '*.cpp' -o -name '*.h' \) -exec clang-format -i {} +
+if ! git diff --quiet -- src tests; then
+    echo "ERROR: C/C++ sources under src/ or tests/ need formatting:"
+    git diff --name-only -- src tests
+    git diff -- src tests
+    exit 1
 fi
+echo "Formatting check passed."
 
-# Step 2: Build Debug
 echo ""
-echo "--- Step 2: Building Debug mode ---"
-mkdir -p build/debug
-cd build/debug
-cmake ../.. -DCMAKE_BUILD_TYPE=Debug
-make -j$(nproc)
-cd ../..
+echo "===== Step 2: Configure Debug (compile_commands for cppcheck) ====="
+cmake -B build/debug -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 
-# Step 3: Build Release
 echo ""
-echo "--- Step 3: Building Release mode ---"
-mkdir -p build/release
-cd build/release
-cmake ../.. -DCMAKE_BUILD_TYPE=Release
-make -j$(nproc)
-cd ../..
+echo "===== Step 3: Static analysis (cppcheck) ====="
+cppcheck --project=build/debug/compile_commands.json \
+    --enable=all \
+    --suppress=missingIncludeSystem \
+    --suppress=unusedFunction \
+    --suppress=useStlAlgorithm \
+    --suppress=constVariablePointer \
+    --inline-suppr \
+    --error-exitcode=1
+echo "Static analysis passed."
 
-# Step 4: Build documentation
 echo ""
-echo "--- Step 4: Building Doxygen documentation ---"
-if command -v doxygen &> /dev/null; then
-    doxygen Doxyfile
-    echo "Documentation generated in docs/html/"
-else
-    echo "Doxygen not found, skipping documentation."
+echo "===== Step 4: Build Debug ====="
+cmake --build build/debug -j"$(nproc)"
+echo "Debug build succeeded."
+
+echo ""
+echo "===== Step 5: Build Release ====="
+cmake -B build/release -DCMAKE_BUILD_TYPE=Release
+cmake --build build/release -j"$(nproc)"
+echo "Release build succeeded."
+
+echo ""
+echo "===== Step 6: Run unit tests (CTest / Google Test) ====="
+ctest --test-dir build/debug --output-on-failure
+echo "All tests passed."
+
+echo ""
+echo "===== Step 7: Coverage (lcov): capture, filter to src/, threshold 90% ====="
+rm -f coverage.info
+lcov --capture --directory build/debug --output-file coverage.info \
+    --ignore-errors mismatch --ignore-errors inconsistent
+lcov --extract coverage.info '*/src/*' --output-file coverage.info --ignore-errors unused
+COVERAGE="$(lcov --summary coverage.info 2>&1 | grep 'lines' | sed 's/.*: //' | sed 's/%.*//')"
+echo "Code coverage (lines, src/): ${COVERAGE}%"
+if (( $(echo "${COVERAGE} < 90" | bc -l) )); then
+    echo "ERROR: Code coverage ${COVERAGE}% is below 90% threshold"
+    exit 1
 fi
-
-# Step 5: Run tests with coverage
-echo ""
-echo "--- Step 5: Running unit tests with coverage ---"
-cd build/debug
-./atm_tests --gtest_output=xml:test_results.xml
-echo ""
-
-# Step 6: Generate coverage report
-echo "--- Step 6: Generating coverage report ---"
-lcov --capture --directory . --output-file coverage.info --no-external 2>/dev/null
-lcov --remove coverage.info '*/tests/*' '*/gtest/*' --output-file coverage.info 2>/dev/null
-genhtml coverage.info --output-directory ../../coverage 2>/dev/null
-cd ../..
+genhtml coverage.info --output-directory coverage
+echo "Coverage HTML: coverage/index.html"
 
 echo ""
-echo "=== Build complete ==="
-echo "  Debug binary:    build/debug/atm_app"
-echo "  Release binary:  build/release/atm_app"
-echo "  Test results:    build/debug/test_results.xml"
-echo "  Coverage report: coverage/index.html"
-echo "  Documentation:   docs/html/index.html"
+echo "===== Step 8: Generate documentation (Doxygen) ====="
+doxygen Doxyfile
+echo "Documentation generated in docs/html/"
+
+echo ""
+echo "===== All steps completed successfully! ====="

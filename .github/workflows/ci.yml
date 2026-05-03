@@ -10,21 +10,6 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: p
-          MYSQL_ROOT_HOST: '%'
-          MYSQL_DATABASE: ATM
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -40,75 +25,37 @@ jobs:
             doxygen \
             graphviz \
             clang-format \
+            cppcheck \
             cmake \
-            build-essential
+            build-essential \
+            bc
           sudo cmake -S /usr/src/googletest -B /tmp/gtest-build
           sudo cmake --build /tmp/gtest-build
           sudo cmake --install /tmp/gtest-build
           sudo rm -rf /tmp/gtest-build
 
-      - name: Check code formatting
+      - name: Run build pipeline
         run: |
-          find src tests -name '*.h' -o -name '*.cpp' | xargs clang-format --dry-run --Werror
+          chmod +x build.sh
+          ./build.sh
 
-      - name: Build Debug
-        run: |
-          mkdir -p build/debug
-          cd build/debug
-          cmake ../.. -DCMAKE_BUILD_TYPE=Debug
-          make -j$(nproc)
-
-      - name: Build Release
-        run: |
-          mkdir -p build/release
-          cd build/release
-          cmake ../.. -DCMAKE_BUILD_TYPE=Release
-          make -j$(nproc)
-
-      - name: Build Documentation
-        run: |
-          doxygen Doxyfile
-
-      - name: Upload Documentation
+      - name: Upload documentation
         uses: actions/upload-artifact@v4
+        if: success()
         with:
           name: documentation
           path: docs/html/
 
-      - name: Run Unit Tests
-        run: |
-          cd build/debug
-          ./atm_tests --gtest_output=xml:test_results.xml
-
-      - name: Generate Coverage Report
-        run: |
-          # From repo root: capture build/debug .gcda data (do not use --no-external — it drops src/).
-          # Restrict report to application sources under src/.
-          # GCC 13 + geninfo may emit "mismatched end line"; ignore so capture can complete.
-          lcov --capture --directory build/debug --output-file coverage.info \
-            --ignore-errors mismatch --ignore-errors inconsistent
-          lcov --extract coverage.info '*/src/*' --output-file coverage.info --ignore-errors unused
-          COVERAGE=$(lcov --summary coverage.info 2>&1 | grep 'lines' | sed 's/.*: //' | sed 's/%.*//')
-          echo "Code coverage: ${COVERAGE}%"
-          if (( $(echo "$COVERAGE < 90" | bc -l) )); then
-            echo "ERROR: Code coverage ${COVERAGE}% is below 90% threshold"
-            exit 1
-          fi
-
-      - name: Upload Coverage Report
-        run: genhtml coverage.info --output-directory coverage
-        if: success()
-
-      - name: Upload Coverage Artifact
+      - name: Upload coverage report
         uses: actions/upload-artifact@v4
+        if: success()
         with:
           name: coverage-report
           path: coverage/
-        if: success()
 
-      - name: Upload Test Results
+      - name: Upload test results
         uses: actions/upload-artifact@v4
+        if: success()
         with:
           name: test-results
           path: build/debug/test_results.xml
-        if: always()

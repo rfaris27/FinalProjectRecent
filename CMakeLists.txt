@@ -31,7 +31,7 @@ if(BUILD_TESTS)
         target_link_options(atm_tests PRIVATE --coverage)
     endif()
 
-    add_test(NAME ATMTests COMMAND atm_tests)
+    add_test(NAME ATMTests COMMAND atm_tests --gtest_output=xml:test_results.xml)
 endif()
 
 # --- Doxygen documentation ---

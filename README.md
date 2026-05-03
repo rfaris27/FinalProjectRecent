@@ -1,4 +1,4 @@
-# MidTermExam — ATM Console Application
+# FinalExam updated — ATM Console Application
 
 I will be documenting each steps during this process to keep track of my work
 
@@ -67,7 +67,7 @@ cd build
 ```bash
 ./build.sh
 ```
-This runs: format check, debug build, release build, Doxygen docs, unit tests, and coverage report.
+This runs the full pipeline (same entry point as CI): **clang-format** (strict), **cppcheck** (via `compile_commands.json`), **CMake** Debug + Release builds, **CTest**, **lcov** coverage on `src/` with a **90%** line gate, **genhtml**, and **Doxygen**.
 
 ## Database Connection
 - **Host:** `db` (Docker service name, used inside the dev container)
@@ -113,19 +113,14 @@ mysql -u root -p ATM < db_dump.sql
 | Google Test | Unit testing framework |
 | gcov + lcov | Code coverage (target: 90%+) |
 | clang-format | Code formatting (Google style, 4-space indent) |
+| cppcheck | Static analysis (uses Debug `compile_commands.json`) |
 | Doxygen | API documentation generation |
 | EditorConfig | Consistent editor settings |
 | GitHub Actions | CI/CD pipeline |
 
 ## CI/CD Pipeline
 
-Every push to `main` triggers GitHub Actions which:
-1. Checks code formatting with clang-format
-2. Builds in Debug mode
-3. Builds in Release mode
-4. Generates Doxygen documentation
-5. Runs unit tests
-6. Generates coverage report (fails if below 90%)
+Every push or PR to `main` runs **`./build.sh`** in GitHub Actions (after installing dependencies): formatting, cppcheck, Debug/Release builds, CTest, coverage report & **90%** threshold, Doxygen. Generated **documentation**, **coverage HTML**, and **Google Test XML** are uploaded as workflow artifacts.
 
 ## Diagrams
 All use case, system, class, component, and deployment diagrams are in [`DIAGRAMS.md`](DIAGRAMS.md).
