@@ -82,9 +82,12 @@ jobs:
 
       - name: Generate Coverage Report
         run: |
-          # Capture from repo root so --no-external keeps src/ (not only build/debug subtree).
-          lcov --capture --directory build/debug --output-file coverage.info --no-external
-          lcov --remove coverage.info '*/tests/*' '*/gtest/*' --output-file coverage.info
+          # From repo root: capture build/debug .gcda data (do not use --no-external — it drops src/).
+          # Restrict report to application sources under src/.
+          # GCC 13 + geninfo may emit "mismatched end line"; ignore so capture can complete.
+          lcov --capture --directory build/debug --output-file coverage.info \
+            --ignore-errors mismatch --ignore-errors inconsistent
+          lcov --extract coverage.info '*/src/*' --output-file coverage.info --ignore-errors unused
           COVERAGE=$(lcov --summary coverage.info 2>&1 | grep 'lines' | sed 's/.*: //' | sed 's/%.*//')
           echo "Code coverage: ${COVERAGE}%"
           if (( $(echo "$COVERAGE < 90" | bc -l) )); then
