@@ -50,17 +50,28 @@ tests/
 3. Run `schema.sql` against the MySQL database to create the `accounts` table
 
 ### Build with CMake
+From the **repository root** (e.g. `/workspaces` in the dev container), not inside `build/`:
+
 ```bash
-mkdir -p build && cd build
-cmake .. -DCMAKE_BUILD_TYPE=Debug
-make -j$(nproc)
-./atm_app
+cmake -B build/debug -DCMAKE_BUILD_TYPE=Debug
+cmake --build build/debug -j$(nproc)
+./build/debug/atm_app
 ```
 
 ### Run Tests
 ```bash
-cd build
-./atm_tests
+cmake -B build/debug -DCMAKE_BUILD_TYPE=Debug
+cmake --build build/debug -j$(nproc)
+ctest --test-dir build/debug --output-on-failure
+# or: ./build/debug/atm_tests
+```
+
+### CMake cache errors (`/repo` vs `/workspaces`)
+If CMake complains that `CMakeCache.txt` was created in a **different directory** (often after Docker vs dev-container path changes), delete the stale build folder and reconfigure:
+
+```bash
+rm -rf build/debug build/release
+cmake -B build/debug -DCMAKE_BUILD_TYPE=Debug
 ```
 
 ### Full Build Script
@@ -120,7 +131,7 @@ mysql -u root -p ATM < db_dump.sql
 
 ## CI/CD Pipeline
 
-Every push or PR to `main` runs **`./build.sh`** in GitHub Actions (after installing dependencies): formatting, cppcheck, Debug/Release builds, CTest, coverage report & **90%** threshold, Doxygen. Generated **documentation**, **coverage HTML**, and **Google Test XML** are uploaded as workflow artifacts.
+Every push or to `main` runs **`./build.sh`** in GitHub Actions (after installing dependencies): formatting, cppcheck, Debug/Release builds, CTest, coverage report & **90%** threshold, Doxygen. Generated **documentation**, **coverage HTML**, and **Google Test XML** are uploaded as workflow artifacts.
 
 ## Diagrams
 All use case, system, class, component, and deployment diagrams are in [`DIAGRAMS.md`](DIAGRAMS.md).
