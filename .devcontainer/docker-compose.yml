@@ -17,15 +17,17 @@ services:
 
   db:
     image: mysql:8.0
-    container_name: MidTermProject-db
     environment:
       MYSQL_ROOT_PASSWORD: p
       MYSQL_ROOT_HOST: '%'
       MYSQL_DATABASE: ATM
     ports:
-      - "3307:3306"
+      # If 3307 is taken, set ATM_HOST_DB_PORT=3308 in a `.env` in the repo root before `docker compose up`.
+      - "${ATM_HOST_DB_PORT:-3307}:3306"
     volumes:
       - db-data:/var/lib/mysql
+      # First-time MySQL volume only: creates table + seed rows (see schema.sql)
+      - ../schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
 
 volumes:
   db-data:

@@ -1,17 +1,12 @@
 {
-  "name": "C++ and .NET Backend",
+  "name": "C++ ATM + MySQL",
   "dockerComposeFile": "docker-compose.yml",
   "service": "app",
   "workspaceFolder": "/workspaces",
-  "features": {
-    "ghcr.io/devcontainers/features/dotnet:1": {
-      "version": "8.0"
-    }
-  },
+  "postAttachCommand": "bash scripts/apply-schema.sh",
   "customizations": {
     "vscode": {
       "extensions": [
-        "ms-dotnettools.csdevkit",
         "ms-vscode.cpptools",
         "cweijan.vscode-mysql-client2"
       ]

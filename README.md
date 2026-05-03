@@ -46,8 +46,35 @@ tests/
 
 ## Setup
 1. Open the project in VS Code with the Dev Containers extension
-2. Reopen in container (it uses `docker-compose.yml`)
-3. Run `schema.sql` against the MySQL database to create the `accounts` table
+2. **Reopen in Container** (uses [`.devcontainer/docker-compose.yml`](.devcontainer/docker-compose.yml)). After load, **`postAttachCommand`** runs [`scripts/apply-schema.sh`](scripts/apply-schema.sh) so `accounts` exists.
+3. **Important:** [`schema.sql`](schema.sql) is only a **text recipe**. Logins like `Adnan123` exist **after** that file is executed against MySQL—not because it sits in the repo. On a **brand-new** Docker volume, MySQL may auto-run it once (see compose `docker-entrypoint-initdb.d` mount). If the table is missing, load it yourself from the **repo root** (use your real path, e.g. `~/Documents/GitHub/recentFinal1` — not `/path/to/...`):
+
+```bash
+cd ~/Documents/GitHub/recentFinal1   # example: wherever you cloned this repo
+chmod +x scripts/apply-schema.sh scripts/check-db.sh
+./scripts/check-db.sh
+./scripts/apply-schema.sh
+```
+
+On your **Mac** (MySQL published on port **3307**), if `mysql` is installed:
+
+```bash
+cd ~/Documents/GitHub/recentFinal1
+DB_HOST=127.0.0.1 DB_PORT=3307 ./scripts/check-db.sh
+DB_HOST=127.0.0.1 DB_PORT=3307 ./scripts/apply-schema.sh
+```
+
+Or with Docker only:
+
+```bash
+docker compose -f .devcontainer/docker-compose.yml up -d db
+docker compose -f .devcontainer/docker-compose.yml exec -T db mysql -u root -pp ATM < schema.sql
+```
+
+### Dev Container will not build (VS Code exit code 1)
+- Use **VS Code from `/Applications`** (not a translocated copy from Downloads); translocated apps often break Dev Containers.
+- Ensure **Docker Desktop** is running.
+- If `docker compose ... up` fails with a **container name** conflict, stop the other project’s stack or run `docker compose -f .devcontainer/docker-compose.yml down` in the other repo first.
 
 ### Build with CMake
 From the **repository root** (e.g. `/workspaces` in the dev container), not inside `build/`:
@@ -57,6 +84,12 @@ cmake -B build/debug -DCMAKE_BUILD_TYPE=Debug
 cmake --build build/debug -j$(nproc)
 ./build/debug/atm_app
 ```
+
+### Run the ATM app in VS Code (common mistakes)
+1. **Use a terminal inside the Dev Container** (status bar shows **Dev Container**). **`db`** as MySQL hostname only works there.
+2. **On the Mac**, use `DB_HOST=127.0.0.1 DB_PORT=3307` with `./scripts/check-db.sh` — not plain `./scripts/check-db.sh`.
+3. **Port 3307 in use** — add `.env` with `ATM_HOST_DB_PORT=3308` (see [`.env.example`](.env.example)), `docker compose ... up -d` again, then use `DB_PORT=3308` for host scripts.
+4. **Rebuild** after code changes: `cmake --build build/debug -j$(nproc)`.
 
 ### Run Tests
 ```bash

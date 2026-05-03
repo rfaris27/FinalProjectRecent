@@ -325,7 +325,7 @@ graph TB
             GCC["g++ Compiler<br/>Build Tools"]
         end
 
-        subgraph "DB Container (MidTermProject-db)"
+        subgraph "DB Container (Compose service db)"
             MYSQL["MySQL 8.0 Server"]
             DATA["db-data Volume<br/>(Persistent Storage)"]
         end
@@ -349,6 +349,6 @@ graph TB
 | Component | Container | Port | Notes |
 |-----------|-----------|------|-------|
 | C++ App | `devcontainer-app` | N/A | Runs inside dev container, connects to DB via service name `db` |
-| MySQL 8.0 | `MidTermProject-db` | 3306 (internal), 3307 (host) | Persistent data via `db-data` Docker volume |
+| MySQL 8.0 | Compose service `db` | 3306 (internal), 3307 (host) | Persistent data via `db-data` Docker volume |
 | Docker Network | `devcontainer_default` | — | Enables container-to-container communication via DNS |
 
