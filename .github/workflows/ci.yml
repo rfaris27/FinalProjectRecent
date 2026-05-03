@@ -82,8 +82,8 @@ jobs:
 
       - name: Generate Coverage Report
         run: |
-          cd build/debug
-          lcov --capture --directory . --output-file coverage.info --no-external
+          # Capture from repo root so --no-external keeps src/ (not only build/debug subtree).
+          lcov --capture --directory build/debug --output-file coverage.info --no-external
           lcov --remove coverage.info '*/tests/*' '*/gtest/*' --output-file coverage.info
           COVERAGE=$(lcov --summary coverage.info 2>&1 | grep 'lines' | sed 's/.*: //' | sed 's/%.*//')
           echo "Code coverage: ${COVERAGE}%"
@@ -93,9 +93,7 @@ jobs:
           fi
 
       - name: Upload Coverage Report
-        run: |
-          cd build/debug
-          genhtml coverage.info --output-directory ../../coverage
+        run: genhtml coverage.info --output-directory coverage
         if: success()
 
       - name: Upload Coverage Artifact
@@ -103,7 +101,7 @@ jobs:
         with:
           name: coverage-report
           path: coverage/
-        if: always()
+        if: success()
 
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
