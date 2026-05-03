@@ -37,9 +37,11 @@ class AdminOptions {
      * @brief Validate that a pin is exactly 5 digits.
      */
     bool isValidPin(const std::string &pin) const {
-        if (pin.length() != 5) return false;
+        if (pin.length() != 5)
+            return false;
         for (char c : pin) {
-            if (!std::isdigit(c)) return false;
+            if (!std::isdigit(c))
+                return false;
         }
         return true;
     }
@@ -72,10 +74,10 @@ class AdminOptions {
         if (newId < 0) {
             return AdminResult(false, "Error creating account.");
         }
-        return AdminResult(
-            true,
-            "Account Successfully Created – the account number assigned is: " + std::to_string(newId),
-            newId);
+        return AdminResult(true,
+                           "Account Successfully Created – the account number assigned is: " +
+                               std::to_string(newId),
+                           newId);
     }
 
     /**
@@ -102,7 +104,8 @@ class AdminOptions {
      */
     std::string getHolderName(int accountNumber) {
         auto account = dal->findCustomerByNumber(accountNumber);
-        if (!account) return "";
+        if (!account)
+            return "";
         return account->getHolderName();
     }
 

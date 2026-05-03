@@ -31,8 +31,8 @@ class LoginDal : public ILoginDal {
         if (res->next()) {
             account = std::make_unique<Account>(
                 res->getInt("AccountNumber"), res->getString("Login"), res->getString("Pin"),
-                res->getString("HolderName"), res->getDouble("Balance"),
-                res->getString("Status"), res->getBoolean("IsAdmin"));
+                res->getString("HolderName"), res->getDouble("Balance"), res->getString("Status"),
+                res->getBoolean("IsAdmin"));
         }
 
         delete res;

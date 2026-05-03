@@ -1,7 +1,7 @@
-#include <mysql_driver.h>
-#include <mysql_connection.h>
 #include <cppconn/driver.h>
 #include <cppconn/exception.h>
+#include <mysql_connection.h>
+#include <mysql_driver.h>
 
 #include "DAL/AdminOptionsDal.cpp"
 #include "DAL/CustomerOptionsDal.cpp"

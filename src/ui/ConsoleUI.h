@@ -31,7 +31,8 @@ class ConsoleUI {
         int value;
         while (true) {
             std::cout << prompt;
-            if (std::cin >> value) return value;
+            if (std::cin >> value)
+                return value;
             std::cout << "Invalid input. Please enter a number." << std::endl;
             std::cin.clear();
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
@@ -45,7 +46,8 @@ class ConsoleUI {
         double value;
         while (true) {
             std::cout << prompt;
-            if (std::cin >> value) return value;
+            if (std::cin >> value)
+                return value;
             std::cout << "Invalid input. Please enter a number." << std::endl;
             std::cin.clear();
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
@@ -69,8 +71,8 @@ class ConsoleUI {
     void showCustomerMenu(const Account &initialAccount) {
         auto currentAccount = std::make_unique<Account>(
             initialAccount.getAccountNumber(), initialAccount.getLogin(), initialAccount.getPin(),
-            initialAccount.getHolderName(), initialAccount.getBalance(),
-            initialAccount.getStatus(), initialAccount.isAdmin());
+            initialAccount.getHolderName(), initialAccount.getBalance(), initialAccount.getStatus(),
+            initialAccount.isAdmin());
 
         while (true) {
             std::cout << "\n--- Customer Menu ---" << std::endl;
@@ -253,19 +255,23 @@ class ConsoleUI {
 
         if (!holder.empty()) {
             auto r = adminService->updateAccountField(accountNumber, "HolderName", holder);
-            if (!r.success) std::cout << r.message << std::endl;
+            if (!r.success)
+                std::cout << r.message << std::endl;
         }
         if (!balanceStr.empty()) {
             auto r = adminService->updateAccountField(accountNumber, "Balance", balanceStr);
-            if (!r.success) std::cout << r.message << std::endl;
+            if (!r.success)
+                std::cout << r.message << std::endl;
         }
         if (!status.empty()) {
             auto r = adminService->updateAccountField(accountNumber, "Status", status);
-            if (!r.success) std::cout << r.message << std::endl;
+            if (!r.success)
+                std::cout << r.message << std::endl;
         }
         if (!login.empty()) {
             auto r = adminService->updateAccountField(accountNumber, "Login", login);
-            if (!r.success) std::cout << r.message << std::endl;
+            if (!r.success)
+                std::cout << r.message << std::endl;
         }
         if (!pin.empty()) {
             auto r = adminService->updateAccountField(accountNumber, "Pin", pin);
