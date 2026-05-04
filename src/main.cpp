@@ -1,11 +1,11 @@
-#include <cstdlib>
-#include <iostream>
-#include <string>
-
 #include <cppconn/driver.h>
 #include <cppconn/exception.h>
 #include <mysql_connection.h>
 #include <mysql_driver.h>
+
+#include <cstdlib>
+#include <iostream>
+#include <string>
 
 #include "DAL/AdminOptionsDal.cpp"
 #include "DAL/CustomerOptionsDal.cpp"
