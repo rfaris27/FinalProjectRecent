@@ -186,3 +186,28 @@ All use case, system, class, component, and deployment diagrams are in [`DIAGRAM
 - [x] build.sh script
 - [x] GitHub Actions CI/CD
 - [x] Class, component, and deployment diagrams
+
+## Command reference
+
+Quick list of common commands from the **repository root** (where `CMakeLists.txt` lives). For Mac vs dev container and DB ports, see **Setup** and **Build with CMake** above.
+
+| Command | What it does |
+|--------|----------------|
+| `cmake -B build/debug -DCMAKE_BUILD_TYPE=Debug` | Configure a **Debug** build (app + tests). |
+| `cmake --build build/debug -j$(nproc)` | Compile inside **Linux/container** (`nproc` = CPU count). On macOS: `-j$(sysctl -n hw.ncpu)` or `-j4`. |
+| `./build/debug/atm_app` | Run the ATM console app (defaults: host `db`, port `3306`, user `root`, password `p`, database `ATM`; override with `DB_*` env vars). |
+| `DB_HOST=127.0.0.1 DB_PORT=3307 ./build/debug/atm_app` | Run from the **host** when MySQL is mapped to **3307** (typical for this repo’s Docker compose). |
+| `ctest --test-dir build/debug --output-on-failure` | Run **CTest** (includes Google Test `ATMTests`). |
+| `./build/debug/atm_tests` | Run the **unit test** binary directly. |
+| `cmake --build build/debug --target docs` | Generate **Doxygen** HTML (only if CMake found Doxygen and defined the `docs` target). |
+| `doxygen Doxyfile` | Generate Doxygen output from the repo root (requires `doxygen` on `PATH`). |
+| `./build.sh` | Full **CI-style** pipeline: format, cppcheck, Debug + Release, CTest, coverage gate, Doxygen. |
+| `./scripts/check-db.sh` | Check database connectivity (optional `DB_HOST`, `DB_PORT`). |
+| `./scripts/apply-schema.sh` | Apply `schema.sql` so sample accounts exist. |
+
+### Sample logins (after `schema.sql` is applied)
+
+| Login | PIN | Role |
+|-------|-----|------|
+| `Adnan123` | `12345` | Administrator |
+| `John456` | `11111` | Customer |
