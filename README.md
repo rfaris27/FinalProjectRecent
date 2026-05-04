@@ -1,6 +1,6 @@
 # FinalExam updated — ATM Console Application
 
-I will be documenting each steps during this process to keep track of my work
+I will be documenting each step during this process to keep track of my work
 
 ## Overview
 A C++ console-based ATM system connected to a MySQL database running in Docker. Supports two user types: **Customers** and **Administrators**.
@@ -164,10 +164,11 @@ mysql -u root -p ATM < db_dump.sql
 
 ## CI/CD Pipeline
 
-Every push or to `main` runs **`./build.sh`** in GitHub Actions (after installing dependencies): formatting, cppcheck, Debug/Release builds, CTest, coverage report & **90%** threshold, Doxygen. Generated **documentation**, **coverage HTML**, and **Google Test XML** are uploaded as workflow artifacts.
+Every push and pull request to `main` runs **`./build.sh`** in GitHub Actions (after installing dependencies): formatting, cppcheck, Debug/Release builds, CTest, coverage report & **90%** threshold, Doxygen. Generated **documentation**, **coverage HTML**, and **Google Test XML** are uploaded as workflow artifacts.
 
 ## Diagrams
-All use case, system, class, component, and deployment diagrams are in [`DIAGRAMS.md`](DIAGRAMS.md).
+
+All use case, system, class, component, and deployment diagrams are in [`DIAGRAMS.md`](DIAGRAMS.md). Console UI text wireframes are in the same file under **Console UI mocks** (after the use case descriptions).
 
 ## Progress
 
@@ -186,6 +187,7 @@ All use case, system, class, component, and deployment diagrams are in [`DIAGRAM
 - [x] build.sh script
 - [x] GitHub Actions CI/CD
 - [x] Class, component, and deployment diagrams
+- [x] Console UI text wireframes (`DIAGRAMS.md`)
 
 ## Command reference
 

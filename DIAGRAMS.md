@@ -71,6 +71,77 @@ graph TD
 
 ---
 
+### Console UI mocks (text wireframes)
+
+The live UI is implemented in `src/ui/ConsoleUI.h`. These ASCII sketches document what the user sees in the terminal for each major step (inside code blocks so `---` lines are not parsed as Markdown horizontal rules).
+
+**Startup / login**
+
+```
+--- ATM System ---
+Enter login: _
+Enter Pin code: _
+```
+
+**After successful login — role selection**
+
+```
+Login as:
+1----Customer
+2----Administrator
+Enter your choice: _
+```
+
+**Customer menu** (loops until Exit)
+
+```
+--- Customer Menu ---
+1----Withdraw Cash
+3----Deposit Cash
+4----Display Balance
+5----Exit
+Enter your choice: _
+```
+
+**Example: withdrawal prompt + receipt** (message text comes from the model layer)
+
+```
+Enter the withdrawal amount: _
+
+<model message, e.g. success or validation error>
+Account #100
+Date: MM/DD/YYYY
+Withdrawn: 50.00
+Balance: 4950.00
+```
+
+**Admin menu**
+
+```
+--- Admin Options ---
+Welcome, <HolderName>
+1----Create New Account
+2----Delete Existing Account
+3----Update Account Information
+4----Search for Account
+6----Exit
+Enter your choice: _
+```
+
+**Example: create account prompts**
+
+```
+The following information must be entered for the new account holder
+Login: _
+Pin Code: _
+Holders Name: _
+Starting Balance: _
+Status: _
+<model message>
+```
+
+---
+
 ## 2. System Diagram for entire application
 
 ```mermaid
@@ -314,7 +385,7 @@ graph TB
 
 ---
 
-## 4. Deployment Diagram
+## 5. Deployment Diagram
 
 ```mermaid
 graph TB
